@@ -32,14 +32,18 @@ class LLMPipeline:
         """
         system_prompt = "Tu es un assistant expert et utile. Génère des réponses informées, structurées et détaillées."
         
+        start_time = time.time()
         response_text = self._call_mistral_with_retry(
             system_prompt=system_prompt,
             user_prompt=user_query
         )
+        end_time = time.time()
+        
+        latency_ms = int((end_time - start_time) * 1000)
         
         return {
             "response": response_text,
-            "latency_ms": 0  # TODO: Implement timing
+            "latency_ms": latency_ms
         }
     
     def _call_mistral_with_retry(self, system_prompt: str, user_prompt: str, max_retries: int = 3) -> str:

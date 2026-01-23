@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>YanaChat V2</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -23,7 +24,7 @@
         
         .container {
             width: 100%;
-            max-width: 700px;
+            max-width: 800px;
             background: white;
             border-radius: 12px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
@@ -91,13 +92,57 @@
             background: #f0f0f0;
             color: #333;
             border-radius: 12px 12px 12px 0;
+            max-width: 90%;
         }
         
         .text {
-            max-width: 70%;
             padding: 12px 16px;
             word-wrap: break-word;
-            line-height: 1.5;
+            overflow-wrap: break-word;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+        
+        /* Markdown styling */
+        .text h1, .text h2, .text h3, .text h4 {
+            margin-top: 12px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        
+        .text h1 { font-size: 18px; }
+        .text h2 { font-size: 16px; }
+        .text h3 { font-size: 15px; }
+        .text h4 { font-size: 14px; }
+        
+        .text ul, .text ol {
+            margin-left: 20px;
+            margin-top: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .text li {
+            margin-bottom: 4px;
+        }
+        
+        .text p {
+            margin-bottom: 8px;
+        }
+        
+        .text code {
+            background: rgba(0, 0, 0, 0.1);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+        
+        .text strong {
+            font-weight: 600;
+        }
+        
+        .text em {
+            font-style: italic;
         }
         
         .input-container {
@@ -167,6 +212,24 @@
                 opacity: 1;
             }
         }
+        
+        /* Scrollbar styling */
+        .chat-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .chat-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        
+        .chat-container::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 4px;
+        }
+        
+        .chat-container::-webkit-scrollbar-thumb:hover {
+            background: #764ba2;
+        }
     </style>
 </head>
 <body>
@@ -205,7 +268,14 @@
             
             const textDiv = document.createElement('div');
             textDiv.className = 'text';
-            textDiv.textContent = text;
+            
+            if (isUser) {
+                // User messages: plain text
+                textDiv.textContent = text;
+            } else {
+                // Bot messages: parse Markdown
+                textDiv.innerHTML = marked.parse(text);
+            }
             
             messageDiv.appendChild(textDiv);
             chatContainer.appendChild(messageDiv);
