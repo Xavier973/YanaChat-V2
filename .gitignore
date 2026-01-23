@@ -13,3 +13,6 @@ venv/
 # OS / IDE
 .vscode/
 .DS_Store
+
+# Documentation
+docs_markdown/

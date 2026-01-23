@@ -27,6 +27,7 @@ chat_handler = ChatHandler()
 class ChatRequest(BaseModel):
     query: str
     session_id: Optional[str] = None
+    web_search: Optional[bool] = False
 
 
 class ChatResponse(BaseModel):
@@ -67,7 +68,8 @@ async def chat(request: ChatRequest) -> ChatResponse:
     Request:
         {
             "query": "Your question here",
-            "session_id": "optional-user-id"
+            "session_id": "optional-user-id",
+            "web_search": false
         }
     
     Response:
@@ -77,7 +79,8 @@ async def chat(request: ChatRequest) -> ChatResponse:
     """
     result = chat_handler.handle_query(
         user_query=request.query,
-        session_id=request.session_id
+        session_id=request.session_id,
+        use_web_search=request.web_search
     )
     
     return ChatResponse(response=result["response"])

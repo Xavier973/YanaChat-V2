@@ -248,6 +248,10 @@
                 placeholder="Posez votre question..."
                 autocomplete="off"
             >
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 14px; color: #666;">
+                <input type="checkbox" id="webSearchCheckbox" style="width: auto;">
+                Recherche web
+            </label>
             <button id="sendBtn" onclick="sendMessage()">Envoyer</button>
         </div>
     </div>
@@ -308,6 +312,7 @@
         
         async function sendMessage() {
             const query = queryInput.value.trim();
+            const webSearch = document.getElementById('webSearchCheckbox').checked;
             
             if (!query) return;
             
@@ -330,7 +335,8 @@
                     },
                     body: JSON.stringify({
                         query: query,
-                        session_id: sessionId
+                        session_id: sessionId,
+                        web_search: webSearch
                     })
                 });
                 
