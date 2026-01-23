@@ -15,8 +15,10 @@ class LLMPipeline:
         """Initialize with API credentials from .env"""
         self.api_url = os.getenv("MISTRAL_API_URL")
         self.api_key = os.getenv("MISTRAL_API_KEY")
-        self.model = "mistral-large-latest"
-        
+        # self.model = "mistral-large-latest"
+        # self.model = "mistral-small-2506"
+        # self.model = "mistral-medium-2508"
+        self.model = "ministral-14b-2512"
         if not self.api_url or not self.api_key:
             raise ValueError("MISTRAL_API_URL and MISTRAL_API_KEY must be set in .env")
     
