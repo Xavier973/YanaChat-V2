@@ -29,11 +29,17 @@ class ChatHandler:
         # Generate response via Mistral
         result = self.llm_pipeline.generate(user_query)
         
-        # Log interaction
+        # Log interaction (JSONL format)
         self._log_interaction(
             query=user_query,
             response=result,
             session_id=session_id or "anonymous"
+        )
+        
+        # Log interaction (readable format)
+        self._log_interaction_readable(
+            query=user_query,
+            response=result
         )
         
         return result
@@ -69,3 +75,39 @@ class ChatHandler:
                 f.write(json.dumps(log_entry, ensure_ascii=False) + "\n")
         except IOError as e:
             print(f"Warning: Could not write to log file: {e}")
+    
+    def _log_interaction_readable(self, query: str, response: Dict) -> None:
+        """
+        Append interaction to readable text log for manual evaluation.
+        
+        Format:
+            [timestamp] model | Query: "query" | Latency: Xms
+            Réponse:
+            response text with indentation
+            
+            ---
+            
+        Args:
+            query: User's input
+            response: LLM response dict
+        """
+        readable_log_path = Path("logs/interactions.log")
+        
+        try:
+            timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+            model = self.llm_pipeline.model
+            latency_ms = response.get("latency_ms", 0)
+            response_text = response.get("response", "")
+            
+            # Format the log entry
+            header = f"[{timestamp}] {model} | Query: \"{query}\" | Latency: {latency_ms}ms\n"
+            body = f"Réponse:\n{response_text}\n\n"
+            separator = "---\n\n"
+            
+            with open(readable_log_path, "a", encoding='utf-8') as f:
+                f.write(header)
+                f.write(body)
+                f.write(separator)
+                
+        except IOError as e:
+            print(f"Warning: Could not write to readable log file: {e}")

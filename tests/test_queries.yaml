@@ -1,0 +1,22 @@
+# Test queries pour YanaChat
+# Format simple : liste de questions à poser à l'API
+# Modifiez cette liste pour tester d'autres scénarios
+
+queries:
+# Tourisme
+- "Je cherche un restaurant à Kourou" 
+- "Que faire en 5 jours en Guyane ?"
+- "Où dormir pour mon séjour en Guyane ?"
+- "Quels sont les plus belles randonnées et sites a absolument visiter ?"
+- "Quels sont les vaccins nécessaires pour aller en Guyane ?"
+
+# Quotidien :
+- "Quels sont les horaires de la Mairie de Remire Montjoly ?"
+- "Quels sont les évènements culturels de cette semaine ?"
+- "Ou je peux acheter un fauteuil de bureau"
+
+# Culture :
+- "Quel est le status de la Guyane ?"
+- "Quelles langues parle t'on en Guyane ?"
+- "C'est quoi un Tololo ?"
+- "Pourquoi on envoie des fusées en Guyane ?"
