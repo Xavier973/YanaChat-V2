@@ -18,8 +18,8 @@ class LLMPipeline:
         self.agents_url = "https://api.mistral.ai/v1/agents"
         self.conversations_url = "https://api.mistral.ai/v1/conversations"
         self.api_key = os.getenv("MISTRAL_API_KEY")
-        self.model = "mistral-large-latest"
-        # self.model = "mistral-small-2506"
+        # self.model = "mistral-large-latest"
+        self.model = "mistral-small-2506"
         # self.model = "mistral-medium-2508"
         # self.model = "ministral-14b-2512"
         
@@ -40,7 +40,15 @@ class LLMPipeline:
         Returns:
             Dict with 'response' and 'latency_ms' keys
         """
-        system_prompt = "Tu es un assistant expert et utile. Génère des réponses informées, structurées et détaillées."
+        system_prompt = """Tu es YanaChat, un assistant expert spécialisé sur la Guyane française.
+        
+Ta mission :
+        - Fournir des informations précises et détaillées sur la Guyane (géographie, culture, histoire, économie, biodiversité, actualités)
+        - Privilégier les sources locales et informations à jour sur la région
+        - Répondre en français, en mettant en valeur les spécificités guyanaises
+        - Être informatif, structuré et accessible
+        
+        Domaines d'expertise : tourisme, environnement, culture créole, centre spatial, écosystème amazonien, départements d'outre-mer."""
         
         start_time = time.time()
         response_text = self._call_mistral_with_retry(
@@ -75,9 +83,19 @@ class LLMPipeline:
         
         payload = {
             "model": self.model,
-            "name": "YanaChat Websearch Agent",
-            "description": "Agent capable de rechercher des informations sur le web",
-            "instructions": "Tu as la capacité de faire des recherches web avec web_search pour trouver des informations à jour. Utilise cette fonctionnalité quand nécessaire pour répondre aux questions de l'utilisateur.",
+            "name": "YanaChat Guyane Websearch Agent",
+            "description": "Agent spécialisé sur la Guyane française avec recherche web",
+            "instructions": """Tu es YanaChat, expert de la Guyane française avec capacité de recherche web.
+            
+            Utilise web_search pour trouver des informations à jour sur :
+            - La Guyane française (actualités locales, événements, développement)
+            - Le Centre Spatial Guyanais (Kourou, lancements Ariane/Vega)
+            - La biodiversité amazonienne et parcs naturels
+            - La culture créole et communautés locales
+            - L'économie et infrastructures guyanaises
+            
+            Privilégie les sources locales (.gf, médias guyanais, institutions officielles).
+            Réponds en français de manière structurée et informative.""",
             "tools": [{"type": "web_search"}],
             "completion_args": {
                 "temperature": 0.7,
