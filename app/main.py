@@ -34,6 +34,10 @@ class ChatResponse(BaseModel):
     response: str
 
 
+class ClearHistoryRequest(BaseModel):
+    session_id: str
+
+
 # Mount static files
 app.mount(
     "/static",
@@ -90,6 +94,52 @@ async def chat(request: ChatRequest) -> ChatResponse:
 async def health():
     """Health check endpoint."""
     return {"status": "ok", "service": "YanaChat V2"}
+
+
+@app.post("/api/clear_history")
+async def clear_history(request: ClearHistoryRequest):
+    """
+    Clear conversation history for a session.
+    
+    Request:
+        {
+            "session_id": "session-to-clear"
+        }
+    
+    Response:
+        {
+            "status": "ok",
+            "message": "History cleared for session: session-to-clear"
+        }
+    """
+    chat_handler.clear_session_history(request.session_id)
+    return {
+        "status": "ok",
+        "message": f"History cleared for session: {request.session_id}"
+    }
+
+
+@app.get("/api/history/{session_id}")
+async def get_history(session_id: str):
+    """
+    Get conversation history for a session.
+    
+    Response:
+        {
+            "session_id": "session-id",
+            "history": [
+                {"role": "user", "content": "..."},
+                {"role": "assistant", "content": "..."}
+            ],
+            "message_count": 4
+        }
+    """
+    history = chat_handler.get_session_history(session_id)
+    return {
+        "session_id": session_id,
+        "history": history,
+        "message_count": len(history)
+    }
 
 
 if __name__ == "__main__":

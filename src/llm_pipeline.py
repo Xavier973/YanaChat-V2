@@ -29,12 +29,13 @@ class LLMPipeline:
         # Cache pour l'agent de websearch (créé une seule fois)
         self._websearch_agent_id = None
     
-    def generate(self, user_query: str, use_web_search: bool = False) -> Dict:
+    def generate(self, user_query: str, conversation_history: list = None, use_web_search: bool = False) -> Dict:
         """
-        Generate response via Mistral API.
+        Generate response via Mistral API with conversation history.
         
         Args:
             user_query: User's question or prompt
+            conversation_history: List of previous messages [{"role": "user"/"assistant", "content": str}]
             use_web_search: Enable web search for up-to-date information
             
         Returns:
@@ -47,6 +48,7 @@ Ta mission :
         - Privilégier les sources locales et informations à jour sur la région
         - Répondre en français, en mettant en valeur les spécificités guyanaises
         - Être informatif, structuré et accessible
+        - Tenir compte du contexte de la conversation précédente
         
         Domaines d'expertise : tourisme, environnement, culture créole, centre spatial, écosystème amazonien, départements d'outre-mer."""
         
@@ -54,6 +56,7 @@ Ta mission :
         response_text = self._call_mistral_with_retry(
             system_prompt=system_prompt,
             user_prompt=user_query,
+            conversation_history=conversation_history or [],
             use_web_search=use_web_search
         )
         end_time = time.time()
@@ -125,21 +128,23 @@ Ta mission :
             print(f"ERROR - Agent creation exception: {str(e)[:100]}")
             raise
     
-    def _call_mistral_with_retry(self, system_prompt: str, user_prompt: str, use_web_search: bool = False, max_retries: int = 3) -> str:
+    def _call_mistral_with_retry(self, system_prompt: str, user_prompt: str, conversation_history: list = None, use_web_search: bool = False, max_retries: int = 3) -> str:
         """
-        Call Mistral API with exponential backoff retry.
+        Call Mistral API with exponential backoff retry and conversation history.
         
         Uses Conversations API when web_search is enabled, otherwise uses Chat Completions.
         
         Args:
             system_prompt: System instructions for the LLM
             user_prompt: User's query
+            conversation_history: Previous messages in the conversation
             use_web_search: Enable web search via Agents/Conversations API
             max_retries: Maximum number of retry attempts
             
         Returns:
             Response text or fallback message on failure
         """
+        conversation_history = conversation_history or []
         for attempt in range(max_retries):
             try:
                 headers = {
@@ -193,13 +198,18 @@ Ta mission :
                         return "Aucune réponse reçue de l'agent."
                     
                 else:
-                    # Standard Chat Completions API
+                    # Standard Chat Completions API avec historique
+                    messages = [{"role": "system", "content": system_prompt}]
+                    
+                    # Ajouter l'historique de conversation
+                    messages.extend(conversation_history)
+                    
+                    # Ajouter le message actuel de l'utilisateur
+                    messages.append({"role": "user", "content": user_prompt})
+                    
                     payload = {
                         "model": self.model,
-                        "messages": [
-                            {"role": "system", "content": system_prompt},
-                            {"role": "user", "content": user_prompt}
-                        ],
+                        "messages": messages,
                         "temperature": 0.7,
                         "max_tokens": 2048
                     }
@@ -230,7 +240,7 @@ Ta mission :
                     # Retry without web search if it failed
                     if use_web_search:
                         print("Retrying without web search...")
-                        return self._call_mistral_with_retry(system_prompt, user_prompt, use_web_search=False, max_retries=1)
+                        return self._call_mistral_with_retry(system_prompt, user_prompt, conversation_history, use_web_search=False, max_retries=1)
                     return f"Erreur de validation: {error_msg}"
                     
                 elif response.status_code == 429:

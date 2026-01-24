@@ -1,23 +1,27 @@
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 
 from src.llm_pipeline import LLMPipeline
 
 
 class ChatHandler:
-    """Orchestration layer: LLM + JSONL logging."""
+    """Orchestration layer: LLM + JSONL logging + conversation memory."""
     
     def __init__(self):
-        """Initialize LLM pipeline and logging setup."""
+        """Initialize LLM pipeline, logging setup, and conversation storage."""
         self.llm_pipeline = LLMPipeline()
         self.log_path = Path("logs/interactions.jsonl")
         self.log_path.parent.mkdir(exist_ok=True)
+        
+        # Stockage de l'historique de conversation par session_id
+        # Format: {session_id: [{"role": "user"/"assistant", "content": str}, ...]}
+        self.conversation_history: Dict[str, List[Dict[str, str]]] = {}
     
     def handle_query(self, user_query: str, session_id: Optional[str] = None, use_web_search: bool = False) -> Dict:
         """
-        Handle user query: LLM generation + JSONL logging.
+        Handle user query: LLM generation + JSONL logging + conversation memory.
         
         Args:
             user_query: User's input text
@@ -27,17 +31,39 @@ class ChatHandler:
         Returns:
             Dict with 'response' key containing the LLM's response
         """
-        # Generate response via Mistral
-        result = self.llm_pipeline.generate(user_query, use_web_search=use_web_search)
+        # Normaliser session_id
+        session_id = session_id or "anonymous"
+        
+        # Récupérer ou initialiser l'historique de cette session
+        if session_id not in self.conversation_history:
+            self.conversation_history[session_id] = []
+        
+        # Generate response via Mistral avec historique
+        result = self.llm_pipeline.generate(
+            user_query, 
+            conversation_history=self.conversation_history[session_id],
+            use_web_search=use_web_search
+        )
+        
+        # Stocker l'échange dans l'historique
+        self.conversation_history[session_id].append({
+            "role": "user",
+            "content": user_query
+        })
+        self.conversation_history[session_id].append({
+            "role": "assistant",
+            "content": result["response"]
+        })
         
         # Add web_search flag to result for logging
         result["web_search"] = use_web_search
+        result["history_length"] = len(self.conversation_history[session_id])
         
         # Log interaction (JSONL format)
         self._log_interaction(
             query=user_query,
             response=result,
-            session_id=session_id or "anonymous"
+            session_id=session_id
         )
         
         # Log interaction (readable format)
@@ -118,3 +144,26 @@ class ChatHandler:
                 
         except IOError as e:
             print(f"Warning: Could not write to readable log file: {e}")
+    
+    def clear_session_history(self, session_id: str) -> None:
+        """
+        Clear conversation history for a specific session.
+        
+        Args:
+            session_id: Session identifier to clear
+        """
+        if session_id in self.conversation_history:
+            del self.conversation_history[session_id]
+            print(f"Cleared history for session: {session_id}")
+    
+    def get_session_history(self, session_id: str) -> List[Dict[str, str]]:
+        """
+        Get conversation history for a specific session.
+        
+        Args:
+            session_id: Session identifier
+            
+        Returns:
+            List of messages in chronological order
+        """
+        return self.conversation_history.get(session_id, [])

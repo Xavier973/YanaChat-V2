@@ -40,6 +40,7 @@
             padding: 20px;
             border-radius: 12px 12px 0 0;
             text-align: center;
+            position: relative;
         }
         
         .header h1 {
@@ -50,6 +51,30 @@
         .header p {
             font-size: 12px;
             opacity: 0.9;
+        }
+        
+        .header-actions {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .clear-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        
+        .clear-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
         }
         
         .chat-container {
@@ -235,6 +260,9 @@
 <body>
     <div class="container">
         <div class="header">
+            <div class="header-actions">
+                <button class="clear-btn" onclick="clearConversation()">🔄 Nouvelle conversation</button>
+            </div>
             <h1>YanaChat V2</h1>
             <p>Powered by Mistral LLM</p>
         </div>
@@ -365,6 +393,35 @@
                 sendMessage();
             }
         });
+        
+        // Clear conversation
+        async function clearConversation() {
+            if (!confirm('Effacer l\'historique de cette conversation ?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/clear_history', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        session_id: sessionId
+                    })
+                });
+                
+                if (response.ok) {
+                    // Clear UI
+                    chatContainer.innerHTML = '';
+                    addMessage('Nouvelle conversation démarrée. Je ne me souviens plus de nos échanges précédents.', false);
+                } else {
+                    alert('Erreur lors de l\'effacement de l\'historique');
+                }
+            } catch (error) {
+                alert('Erreur: ' + error.message);
+            }
+        }
         
         // Focus input on load
         queryInput.focus();
