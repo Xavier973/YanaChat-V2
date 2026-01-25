@@ -180,6 +180,11 @@ Get-Content logs/interactions.jsonl | ConvertFrom-Json -Stream | ConvertTo-Json
 - Check network connectivity
 - Retry is automatic with exponential backoff
 
+### Web Search Sources Not Logged
+- **Known limitation**: Mistral Conversations API doesn't expose web_search sources
+- See [`LIMITATIONS.md`](LIMITATIONS.md) for details and workarounds
+- The `sources` field in logs will always be empty `[]` with current API
+
 ## License
 
 MIT

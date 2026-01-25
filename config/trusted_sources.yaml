@@ -1,0 +1,39 @@
+# Sources prioritaires pour recherche web YanaChat
+# Format: Catégories de sites web fiables sur la Guyane française
+
+medias_actualites:
+  - franceguyane.fr
+  - la1ere.franceinfo.fr/guyane
+  - peyiguyane.com
+
+institutionnels:
+  - ctguyane.fr
+  - guyane.pref.gouv.fr
+  - ville-cayenne.fr
+  - remire-montjoly.fr
+  - ville-kourou.fr
+
+Vie_quotidienne:
+  - www.cacl-guyane.fr
+
+tourisme_voyage:
+  - guyane-amazonie.fr
+  - parc-amazonien-guyane.fr
+  - reserve-tresor.fr
+  - centrespatialguyanais.cnes.fr/fr
+  - rocketlaunch.live/?filter=arianespace&utm_source=chatgpt.com
+
+evenements_culture:
+  - bizouk.com
+  - agora.gf/horaires
+  - eldorado-guyane.fr
+  - urania.gf
+
+economie:
+  - guyane.cci.fr
+  - insee.fr
+
+education_recherche:
+  - univ-guyane.fr
+  - cnrs.fr
+  - ac-guyane.fr

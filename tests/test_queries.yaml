@@ -13,10 +13,15 @@ queries:
 # Quotidien :
 - "Quels sont les horaires de la Mairie de Remire Montjoly ?"
 - "Quels sont les évènements culturels de cette semaine ?"
+- "Quel bus prendre pour aller du centre ville de Cayenne à Family Plaza"
+- "Quels sont les films à l'affiche dans les cinémas de Cayenne ?"
 - "Ou je peux acheter un fauteuil de bureau"
+
 
 # Culture :
 - "Quel est le status de la Guyane ?"
 - "Quelles langues parle t'on en Guyane ?"
 - "C'est quoi un Tololo ?"
 - "Pourquoi on envoie des fusées en Guyane ?"
+- "Qui est Gabriel Serville et quel rôle joue-t-il en Guyane ?"
+- "Parlez-moi des peuples autochtones de Guyane et de leur culture."

@@ -2,6 +2,8 @@ import os
 import time
 import json
 import requests
+import yaml
+from pathlib import Path
 from typing import Dict
 from requests.exceptions import Timeout, RequestException
 from dotenv import load_dotenv
@@ -28,6 +30,37 @@ class LLMPipeline:
         
         # Cache pour l'agent de websearch (créé une seule fois)
         self._websearch_agent_id = None
+        
+        # Charger les sources fiables depuis config
+        self.trusted_sources = self._load_trusted_sources()
+    
+    def _load_trusted_sources(self) -> Dict:
+        """Load trusted sources from config file."""
+        config_path = Path(__file__).parent.parent / "config" / "trusted_sources.yaml"
+        try:
+            if config_path.exists():
+                with open(config_path, 'r', encoding='utf-8') as f:
+                    return yaml.safe_load(f)
+            else:
+                print(f"WARNING - Config file not found: {config_path}")
+                return {}
+        except Exception as e:
+            print(f"ERROR - Failed to load trusted sources: {str(e)[:100]}")
+            return {}
+    
+    def _format_sources_for_prompt(self) -> str:
+        """Format trusted sources as a string for prompt injection."""
+        if not self.trusted_sources:
+            return ""
+        
+        sources_list = []
+        for category, sites in self.trusted_sources.items():
+            if isinstance(sites, list) and category != 'search_instructions':
+                sources_list.extend(sites)
+        
+        if sources_list:
+            return f"Sources prioritaires à consulter : {', '.join(sources_list[:15])}"
+        return ""
     
     def generate(self, user_query: str, conversation_history: list = None, use_web_search: bool = False) -> Dict:
         """
@@ -41,19 +74,23 @@ class LLMPipeline:
         Returns:
             Dict with 'response' and 'latency_ms' keys
         """
-        system_prompt = """Tu es YanaChat, un assistant expert spécialisé sur la Guyane française.
+        # Construire le system prompt avec sources fiables
+        sources_info = self._format_sources_for_prompt()
+        sources_section = f"\n\n{sources_info}" if sources_info else ""
+        
+        system_prompt = f"""Tu es YanaChat, un assistant expert spécialisé sur la Guyane française.
         
 Ta mission :
         - Fournir des informations précises et détaillées sur la Guyane (géographie, culture, histoire, économie, biodiversité, actualités)
         - Privilégier les sources locales et informations à jour sur la région
         - Répondre en français, en mettant en valeur les spécificités guyanaises
         - Être informatif, structuré et accessible
-        - Tenir compte du contexte de la conversation précédente
+        - Tenir compte du contexte de la conversation précédente{sources_section}
         
         Domaines d'expertise : tourisme, environnement, culture créole, centre spatial, écosystème amazonien, départements d'outre-mer."""
         
         start_time = time.time()
-        response_text = self._call_mistral_with_retry(
+        result = self._call_mistral_with_retry(
             system_prompt=system_prompt,
             user_prompt=user_query,
             conversation_history=conversation_history or [],
@@ -63,10 +100,19 @@ Ta mission :
         
         latency_ms = int((end_time - start_time) * 1000)
         
-        return {
-            "response": response_text,
-            "latency_ms": latency_ms
-        }
+        # Result peut être un dict (avec sources) ou un string (sans sources)
+        if isinstance(result, dict):
+            return {
+                "response": result.get("response", result.get("text", "")),
+                "latency_ms": latency_ms,
+                "sources": result.get("sources", [])
+            }
+        else:
+            return {
+                "response": result,
+                "latency_ms": latency_ms,
+                "sources": []
+            }
     
     def _get_or_create_websearch_agent(self) -> str:
         """
@@ -84,18 +130,28 @@ Ta mission :
             "Content-Type": "application/json"
         }
         
+        # Construire les instructions avec sites prioritaires
+        sources_instruction = ""
+        if self.trusted_sources:
+            all_sources = []
+            for category, sites in self.trusted_sources.items():
+                if isinstance(sites, list):
+                    all_sources.extend(sites)
+            if all_sources:
+                sources_instruction = f"\n\nSITES PRIORITAIRES (à consulter en premier) :\n{', '.join(all_sources)}"
+        
         payload = {
             "model": self.model,
             "name": "YanaChat Guyane Websearch Agent",
             "description": "Agent spécialisé sur la Guyane française avec recherche web",
-            "instructions": """Tu es YanaChat, expert de la Guyane française avec capacité de recherche web.
+            "instructions": f"""Tu es YanaChat, expert de la Guyane française avec capacité de recherche web.
             
             Utilise web_search pour trouver des informations à jour sur :
             - La Guyane française (actualités locales, événements, développement)
             - Le Centre Spatial Guyanais (Kourou, lancements Ariane/Vega)
             - La biodiversité amazonienne et parcs naturels
             - La culture créole et communautés locales
-            - L'économie et infrastructures guyanaises
+            - L'économie et infrastructures guyanaises{sources_instruction}
             
             Privilégie les sources locales (.gf, médias guyanais, institutions officielles).
             Réponds en français de manière structurée et informative.""",
@@ -118,7 +174,6 @@ Ta mission :
             if response.status_code in [200, 201]:
                 data = response.json()
                 self._websearch_agent_id = data["id"]
-                print(f"DEBUG - Created websearch agent: {self._websearch_agent_id}")
                 return self._websearch_agent_id
             else:
                 print(f"ERROR - Failed to create agent: {response.status_code} {response.text[:500]}")
@@ -161,8 +216,6 @@ Ta mission :
                         "inputs": [{"role": "user", "content": user_prompt}]
                     }
                     
-                    print(f"DEBUG - Websearch conversation (agent_id={agent_id})")
-                    
                     response = requests.post(
                         self.conversations_url,
                         headers=headers,
@@ -172,17 +225,23 @@ Ta mission :
                     
                     if response.status_code == 200:
                         data = response.json()
-                        print(f"DEBUG - Conversation response keys: {list(data.keys())}")
                         
-                        # Extract response from conversation outputs (not "entries")
+                        # NOTE: L'API Conversations de Mistral ne retourne PAS les sources web_search
+                        # dans la réponse. Les résultats de recherche sont utilisés en interne
+                        # mais ne sont pas exposés via l'API. Pour avoir les sources, il faudrait
+                        # utiliser l'API Messages avec tool calls manuels.
+                        sources = []
+                        
+                        # Extract response from conversation outputs
+                        response_text = None
                         for entry in data.get("outputs", []):
                             if entry.get("type") == "message.output":
                                 content = entry.get("content", [])
                                 
                                 # Handle case where content is a string instead of list
                                 if isinstance(content, str):
-                                    print(f"DEBUG - Content is string, length: {len(content)}")
-                                    return content
+                                    response_text = content
+                                    break
                                 
                                 # Handle list of chunks
                                 text_parts = []
@@ -192,10 +251,13 @@ Ta mission :
                                     elif isinstance(chunk, str):
                                         text_parts.append(chunk)
                                 
-                                result = "\n".join(text_parts) if text_parts else "Aucune réponse reçue."
-                                print(f"DEBUG - Extracted text length: {len(result)}")
-                                return result
-                        return "Aucune réponse reçue de l'agent."
+                                response_text = "\n".join(text_parts) if text_parts else "Aucune réponse reçue."
+                                break
+                        
+                        if response_text is None:
+                            response_text = "Aucune réponse reçue de l'agent."
+                        
+                        return {"response": response_text, "sources": sources}
                     
                 else:
                     # Standard Chat Completions API avec historique
@@ -244,12 +306,15 @@ Ta mission :
                     return f"Erreur de validation: {error_msg}"
                     
                 elif response.status_code == 429:
+                    # Rate limit: backoff exponentiel plus long
+                    wait_time = 5 * (2 ** attempt)  # 5s, 10s, 20s
+                    print(f"⚠️  Rate limit (429) - Retry {attempt + 1}/{max_retries} après {wait_time}s...")
                     if attempt < max_retries - 1:
-                        wait_time = 2 ** (attempt + 1)
-                        print(f"Rate limit, waiting {wait_time}s...")
                         time.sleep(wait_time)
                         continue
-                    return "Erreur: Limite de requêtes atteinte."
+                    else:
+                        print(f"❌ Rate limit persistant après {max_retries} tentatives")
+                        return "Erreur: Limite de requêtes atteinte. Réessayez dans quelques secondes."
                     
                 else:
                     print(f"HTTP {response.status_code}: {response.text[:200]}")

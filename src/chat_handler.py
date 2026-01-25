@@ -98,7 +98,8 @@ class ChatHandler:
             "web_search": response.get("web_search", False),
             "query": query,
             "response": response.get("response", "")[:500],
-            "latency_ms": response.get("latency_ms", 0)
+            "latency_ms": response.get("latency_ms", 0),
+            "sources": response.get("sources", [])
         }
         
         try:
@@ -128,6 +129,7 @@ class ChatHandler:
             timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
             model = self.llm_pipeline.model
             latency_ms = response.get("latency_ms", 0)
+            sources = response.get("sources", [])
             web_search = response.get("web_search", False)
             response_text = response.get("response", "")
             
@@ -135,11 +137,23 @@ class ChatHandler:
             web_indicator = " [WEB SEARCH]" if web_search else ""
             header = f"[{timestamp}] {model}{web_indicator} | Query: \"{query}\" | Latency: {latency_ms}ms\n"
             body = f"Réponse:\n{response_text}\n\n"
+            
+            # Add sources if available
+            sources_section = ""
+            if sources:
+                sources_section = f"Sources consultées ({len(sources)}):\n"
+                for idx, source in enumerate(sources, 1):
+                    url = source.get("url", "N/A")
+                    title = source.get("title", "N/A")
+                    sources_section += f"  [{idx}] {title}\n      {url}\n"
+                sources_section += "\n"
+            
             separator = "---\n\n"
             
             with open(readable_log_path, "a", encoding='utf-8') as f:
                 f.write(header)
                 f.write(body)
+                f.write(sources_section)
                 f.write(separator)
                 
         except IOError as e:

@@ -99,14 +99,14 @@ def print_separator():
 
 
 def run_all_tests(yaml_path: Path, api_url: str = "http://localhost:8000/api/chat",
-                  web_search: bool = False, delay: float = 1.0):
+                  web_search: bool = True, delay: float = 1.0):
     """
     Lance tous les tests depuis le fichier YAML.
     
     Args:
         yaml_path: Chemin vers test_queries.yaml
         api_url: URL de l'API
-        web_search: Active recherche web (plus lent)
+        web_search: Active recherche web (plus lent, actif par défaut)
         delay: Délai entre requêtes (secondes)
     """
     print(f"\n{Colors.HEADER}{Colors.BOLD}🧪 YanaChat Test Suite{Colors.ENDC}")
@@ -208,15 +208,16 @@ if __name__ == "__main__":
         help="URL de l'API (défaut: http://localhost:8000/api/chat)"
     )
     parser.add_argument(
-        "--web-search",
-        action="store_true",
-        help="Active recherche web via Mistral Agents (plus lent)"
+        "--no-web-search",
+        action="store_false",
+        dest="web_search",
+        help="Désactive recherche web (activée par défaut)"
     )
     parser.add_argument(
         "--delay",
         type=float,
-        default=1.0,
-        help="Délai entre requêtes en secondes (défaut: 1.0)"
+        default=2.0,
+        help="Délai entre requêtes en secondes (défaut: 2.0, min recommandé pour web_search)"
     )
     
     args = parser.parse_args()
