@@ -16,3 +16,10 @@ venv/
 
 # Documentation
 docs_markdown/
+
+# Traefik / Let's Encrypt
+letsencrypt/
+traefik-logs/
+*.pem
+*.crt
+*.key

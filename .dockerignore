@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+ENV/
+env/
+
+# Logs (seront montés comme volumes)
+logs/*.log
+logs/*.jsonl
+
+# Git
+.git/
+.gitignore
+
+# Docker
+docker-compose*.yml
+Dockerfile
+.dockerignore
+
+# Documentation
+docs_yanachat/
+docs_markdown/
+*.md
+
+# Tests (seront montés comme volumes en dev)
+tests/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Certificats Let's Encrypt
+letsencrypt/
+traefik-logs/

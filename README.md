@@ -44,13 +44,29 @@ python tests/run_tests.py
 
 ## Docker
 
+### Development (HTTP)
 ```bash
-# Build and run
-docker compose up --build
+# Build and run (local HTTP)
+docker compose -f docker-compose.dev.yml up --build
 
 # View logs
-docker compose logs -f api
+docker compose -f docker-compose.dev.yml logs -f api
 ```
+
+### Production (HTTPS with Traefik)
+```bash
+# Configure .env first (DOMAIN, ACME_EMAIL, etc.)
+cp .env.example .env
+nano .env
+
+# Build and run (HTTPS auto-configured)
+docker compose -f docker-compose.prod.yml up -d --build
+
+# View logs
+docker compose -f docker-compose.prod.yml logs -f
+```
+
+📖 **Guide complet HTTPS** : [docs_yanachat/DEPLOYMENT_HTTPS.md](docs_yanachat/DEPLOYMENT_HTTPS.md)
 
 ## API Endpoints
 

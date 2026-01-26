@@ -1,0 +1,108 @@
+version: '3.8'
+
+services:
+  traefik:
+    image: traefik:v2.11
+    container_name: yanachat_traefik
+    restart: unless-stopped
+    command:
+      # Traefik API/Dashboard (désactiver en production si non sécurisé)
+      - "--api.dashboard=true"
+      - "--api.insecure=false"
+      
+      # Providers
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=yanachat"
+      
+      # Entrypoints
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      
+      # Redirection HTTP -> HTTPS
+      - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
+      - "--entrypoints.web.http.redirections.entrypoint.permanent=true"
+      
+      # Let's Encrypt
+      - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
+      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+      # IMPORTANT: Décommenter la ligne suivante pour activer le staging (tests)
+      # - "--certificatesresolvers.letsencrypt.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
+      
+      # Logs
+      - "--log.level=INFO"
+      - "--accesslog=true"
+    
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"  # Dashboard Traefik (désactiver en prod ou sécuriser)
+    
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./letsencrypt:/letsencrypt
+      - ./traefik-logs:/var/log/traefik
+    
+    networks:
+      - yanachat
+    
+    labels:
+      # Dashboard Traefik (optionnel, sécuriser avec BasicAuth en prod)
+      - "traefik.enable=true"
+      - "traefik.http.routers.dashboard.rule=Host(`${TRAEFIK_DOMAIN}`)"
+      - "traefik.http.routers.dashboard.entrypoints=websecure"
+      - "traefik.http.routers.dashboard.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.dashboard.service=api@internal"
+      # BasicAuth pour dashboard (optionnel)
+      # - "traefik.http.routers.dashboard.middlewares=auth"
+      # - "traefik.http.middlewares.auth.basicauth.users=${TRAEFIK_AUTH}"
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: yanachat_api
+    restart: unless-stopped
+    environment:
+      - MISTRAL_API_KEY=${MISTRAL_API_KEY}
+      - MISTRAL_API_URL=${MISTRAL_API_URL}
+      - PORT=8000
+    
+    volumes:
+      - ./logs:/app/logs
+      - ./config:/app/config
+    
+    # Port interne uniquement (Traefik route le trafic)
+    expose:
+      - "8000"
+    
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2
+    
+    networks:
+      - yanachat
+    
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.yanachat.rule=Host(`${DOMAIN}`)"
+      - "traefik.http.routers.yanachat.entrypoints=websecure"
+      - "traefik.http.routers.yanachat.tls.certresolver=letsencrypt"
+      - "traefik.http.services.yanachat.loadbalancer.server.port=8000"
+      
+      # Middlewares optionnels
+      - "traefik.http.routers.yanachat.middlewares=security-headers,rate-limit"
+      
+      # Security headers
+      - "traefik.http.middlewares.security-headers.headers.stsSeconds=31536000"
+      - "traefik.http.middlewares.security-headers.headers.stsIncludeSubdomains=true"
+      - "traefik.http.middlewares.security-headers.headers.stsPreload=true"
+      - "traefik.http.middlewares.security-headers.headers.customFrameOptionsValue=SAMEORIGIN"
+      
+      # Rate limiting (100 req/sec)
+      - "traefik.http.middlewares.rate-limit.ratelimit.average=100"
+      - "traefik.http.middlewares.rate-limit.ratelimit.burst=50"
+
+networks:
+  yanachat:
+    driver: bridge
