@@ -108,16 +108,20 @@ nslookup votredomaine.com
 
 ### 3. Firewall VPS
 
+**⚠️ IMPORTANT : Autoriser SSH (port 22) AVANT tout pour éviter de vous bloquer !**
+
 ```bash
 # UFW (Ubuntu/Debian)
-sudo ufw allow 80/tcp
-sudo ufw allow 443/tcp
+sudo ufw allow 22/tcp    # ⚠️ SSH - OBLIGATOIRE pour ne pas perdre l'accès !
+sudo ufw allow 80/tcp    # HTTP
+sudo ufw allow 443/tcp   # HTTPS
 sudo ufw allow 8080/tcp  # Dashboard Traefik (optionnel, sécuriser)
 sudo ufw enable
 
 # iptables (alternative)
-sudo iptables -A INPUT -p tcp --dport 80 -j ACCEPT
-sudo iptables -A INPUT -p tcp --dport 443 -j ACCEPT
+sudo iptables -A INPUT -p tcp --dport 22 -j ACCEPT   # SSH
+sudo iptables -A INPUT -p tcp --dport 80 -j ACCEPT   # HTTP
+sudo iptables -A INPUT -p tcp --dport 443 -j ACCEPT  # HTTPS
 ```
 
 ---
@@ -167,7 +171,7 @@ nano .env
 
 ```env
 # Mistral API
-MISTRAL_API_KEY=XBc7LdqT8mVB7DPeieV7KP4ZE3Geoz2R
+MISTRAL_API_KEY=votre clé ici
 MISTRAL_API_URL=https://api.mistral.ai/v1/chat/completions
 
 # Domaines
