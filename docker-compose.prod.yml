@@ -68,6 +68,11 @@ services:
     environment:
       - MISTRAL_API_KEY=${MISTRAL_API_KEY}
       - MISTRAL_API_URL=${MISTRAL_API_URL}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - REPORT_EMAIL=${REPORT_EMAIL}
       - PORT=8000
     
     volumes:

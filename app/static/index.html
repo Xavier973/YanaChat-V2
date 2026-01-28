@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YanaChat V2</title>
+    <title>YanaChat POC</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
@@ -76,6 +76,22 @@
         
         .clear-btn:hover {
             background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+        
+        .report-btn {
+            background: rgba(255, 100, 100, 0.3);
+            border: 1px solid rgba(255, 100, 100, 0.4);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        
+        .report-btn:hover {
+            background: rgba(255, 100, 100, 0.5);
             transform: scale(1.05);
         }
         
@@ -261,7 +277,7 @@
         /* Footer styling */
         .footer {
             background: rgba(0, 0, 0, 0.05);
-            padding: 15px;
+            padding: 10px;
             border-radius: 0 0 12px 12px;
             text-align: center;
             border-top: 1px solid rgba(0, 0, 0, 0.1);
@@ -269,9 +285,19 @@
         
         .footer-links {
             display: flex;
+            flex-wrap: wrap;
             justify-content: center;
-            gap: 20px;
+            gap: 5px 10px;
             align-items: center;
+        }
+        
+        .footer-links p {
+            margin: 0;
+        }
+        
+        .footer-links .footer-text {
+            display: block;
+            flex-basis: auto;
         }
         
         .footer-links a {
@@ -280,7 +306,7 @@
             font-size: 14px;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
             transition: all 0.2s;
             font-weight: 500;
         }
@@ -291,7 +317,7 @@
         }
         
         .footer-links a::before {
-            font-size: 18px;
+            font-size: 14px;
         }
         
         .footer-text {
@@ -419,6 +445,47 @@
                 transform: translateY(0);
             }
         }
+        
+        /* Report modal specific styles */
+        .report-modal .modal-content {
+            max-width: 500px;
+        }
+        
+        .report-modal textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 14px;
+            resize: vertical;
+            margin-bottom: 15px;
+        }
+        
+        .report-modal textarea:focus {
+            outline: none;
+            border-color: #02b63e;
+        }
+        
+        .report-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        
+        .report-actions button {
+            padding: 10px 20px;
+            font-size: 14px;
+        }
+        
+        .btn-cancel {
+            background: #ccc;
+        }
+        
+        .btn-cancel:hover {
+            background: #999;
+        }
     </style>
 </head>
 <body>
@@ -449,9 +516,13 @@
         
         <div class="footer">
             <div class="footer-links">
-                <p style="font-size: 14px; color: #666;">© 2026 YanaChat - Proof of Concept Technique</p>
-                <p style="font-size: 14px; color: #666;">Les réponses peuvent contenir des erreurs ou des imprécisions.</p>
+                <p style="font-size: 12px; color: #666;">© 2026 YanaChat</p>
+                <span style="color: #999; font-size: 14px;">•</span>
+                <p style="font-size: 12px; color: #666;">Les réponses peuvent contenir des erreurs ou des imprécisions.</p>
+                <span style="flex-basis: 100%; height: 0;"></span>
                 <span class="footer-text" onclick="openModal()">À propos - Contact</span>
+                <span style="color: #999; font-size: 14px;">•</span>
+                <span class="footer-text" onclick="openReportModal()">Signaler un problème</span>
             </div>
         </div>
     </div>
@@ -477,6 +548,22 @@
                 <a href="mailto:x.cuniberti@gmail.com">
                     <i class="fas fa-envelope"></i> Mail
                 </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Report Modal -->
+    <div id="reportModal" class="modal report-modal" onclick="closeReportModalOnOutside(event)">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeReportModal()">&times;</span>
+            <div class="modal-header">
+                <h2 style="color: #ff6464;">⚠️ Signaler un problème</h2>
+                <p style="text-align: center; margin-bottom: 20px;">Décrivez le problème rencontré avec cette conversation.</p>
+            </div>
+            <textarea id="reportMessage" placeholder="Décrivez le problème (réponse incorrecte, inappropriée, etc.)..."></textarea>
+            <div class="report-actions">
+                <button class="btn-cancel" onclick="closeReportModal()">Annuler</button>
+                <button onclick="sendReport()">Envoyer le signalement</button>
             </div>
         </div>
     </div>
@@ -509,6 +596,9 @@
             messageDiv.appendChild(textDiv);
             chatContainer.appendChild(messageDiv);
             chatContainer.scrollTop = chatContainer.scrollHeight;
+            
+            // Track message for reporting
+            trackMessage(text, isUser);
         }
         
         function showLoading() {
@@ -611,6 +701,7 @@
                 if (response.ok) {
                     // Clear UI
                     chatContainer.innerHTML = '';
+                    conversationHistory = []; // Reset report history
                     addMessage('Nouvelle conversation démarrée. Je ne me souviens plus de nos échanges précédents.', false);
                 } else {
                     alert('Erreur lors de l\'effacement de l\'historique');
@@ -653,6 +744,72 @@
                 localStorage.setItem('yanachat_modal_seen', 'true');
             }
         });
+        
+        // Report modal functions
+        let conversationHistory = [];
+        
+        // Track conversation history
+        function trackMessage(content, isUser) {
+            conversationHistory.push({
+                role: isUser ? 'user' : 'assistant',
+                content: content
+            });
+        }
+        
+        function openReportModal() {
+            if (conversationHistory.length === 0) {
+                alert('Aucune conversation à signaler. Commencez par poser une question.');
+                return;
+            }
+            document.getElementById('reportModal').classList.add('active');
+            document.getElementById('reportMessage').value = '';
+        }
+        
+        function closeReportModal() {
+            document.getElementById('reportModal').classList.remove('active');
+        }
+        
+        function closeReportModalOnOutside(event) {
+            if (event.target.id === 'reportModal') {
+                closeReportModal();
+            }
+        }
+        
+        async function sendReport() {
+            const userMessage = document.getElementById('reportMessage').value.trim();
+            
+            if (!userMessage) {
+                alert('Veuillez décrire le problème avant d\'envoyer.');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/report', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        session_id: sessionId,
+                        user_message: userMessage,
+                        conversation: conversationHistory
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'ok') {
+                    alert('✅ Signalement envoyé avec succès. Merci pour votre retour !');
+                    closeReportModal();
+                } else if (data.status === 'error' && data.message.includes('SMTP not configured')) {
+                    alert('⚠️ Service de signalement non configuré.\n\nVeuillez contacter directement : x.cuniberti@gmail.com');
+                } else {
+                    alert('❌ Erreur lors de l\'envoi : ' + data.message);
+                }
+            } catch (error) {
+                alert('❌ Erreur de connexion : ' + error.message);
+            }
+        }
     </script>
 </body>
 </html>
