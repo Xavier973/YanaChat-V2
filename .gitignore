@@ -10,6 +10,9 @@ venv/
 # Docker
 *.log
 
+# Logs
+logs/interactions.jsonl
+
 # OS / IDE
 .vscode/
 .DS_Store
