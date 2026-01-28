@@ -661,7 +661,21 @@
                     const data = await response.json();
                     addMessage(data.response, false);
                 } else {
-                    addMessage('Erreur: ' + response.statusText, false);
+                    // Tenter de parser le JSON pour obtenir le message d'erreur
+                    let errorMessage = 'Erreur: ' + response.statusText;
+                    try {
+                        const errorData = await response.json();
+                        if (errorData.detail) {
+                            errorMessage = 'Erreur: ' + errorData.detail;
+                        }
+                    } catch {
+                        // Si ce n'est pas du JSON, utiliser le texte brut
+                        const errorText = await response.text();
+                        if (errorText) {
+                            errorMessage = 'Erreur: ' + errorText.substring(0, 200);
+                        }
+                    }
+                    addMessage(errorMessage, false);
                 }
             } catch (error) {
                 removeLoading();

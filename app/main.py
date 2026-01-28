@@ -90,13 +90,21 @@ async def chat(request: ChatRequest) -> ChatResponse:
             "response": "Mistral's response here"
         }
     """
-    result = chat_handler.handle_query(
-        user_query=request.query,
-        session_id=request.session_id,
-        use_web_search=request.web_search
-    )
-    
-    return ChatResponse(response=result["response"])
+    try:
+        result = chat_handler.handle_query(
+            user_query=request.query,
+            session_id=request.session_id,
+            use_web_search=request.web_search
+        )
+        
+        return ChatResponse(response=result["response"])
+    except Exception as e:
+        # Log l'erreur et retourner une réponse d'erreur propre
+        import traceback
+        error_msg = f"Erreur interne du serveur: {str(e)}"
+        print(f"Error in /api/chat: {traceback.format_exc()}")
+        from fastapi import HTTPException
+        raise HTTPException(status_code=500, detail=error_msg)
 
 
 @app.get("/health")
