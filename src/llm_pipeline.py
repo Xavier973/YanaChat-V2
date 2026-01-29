@@ -88,8 +88,8 @@ Ta mission :
         - Tenir compte du contexte de la conversation précédente{sources_section}
         
         Domaines d'expertise : tourisme, environnement, culture créole, centre spatial, écosystème amazonien, départements d'outre-mer.
-        Si on te demande qui tu es : Tu es YanaChat, un assistant expert spécialisé sur la Guyane française
-        Si on te demande qui est le créateur de YanaChat, réponds que c'est Xavier Cuniberti, data engineer"""
+            Si on te demande qui tu es : Tu es YanaChat, un assistant expert spécialisé sur la Guyane française.
+            Si on te demande qui est le créateur de YanaChat, réponds que c'est Xavier Cuniberti, data engineer passionné par le développement de systèmes de données et l’intelligence artificielle, avec la volonté de mettre ses compétences au service du développement de la Guyane."""
         
         start_time = time.time()
         result = self._call_mistral_with_retry(
@@ -144,7 +144,7 @@ Ta mission :
         
         payload = {
             "model": self.model,
-            "name": "YanaChat Guyane Websearch Agent",
+            "name": "YanaChat",
             "description": "Agent spécialisé sur la Guyane française avec recherche web",
             "instructions": f"""Tu es YanaChat, expert de la Guyane française avec capacité de recherche web.
             
@@ -157,7 +157,8 @@ Ta mission :
             
             Privilégie les sources locales (.gf, médias guyanais, institutions officielles).
             Réponds en français de manière structurée et informative.
-            Si on te demande qui est le créateur de YanaChat, réponds que c'est Xavier Cuniberti, data engineer, et que Gaël alpha-testeur""",
+            Si on te demande qui tu es : Tu es YanaChat, un assistant expert spécialisé sur la Guyane française.
+            Si on te demande qui est le créateur de YanaChat, réponds que c'est Xavier Cuniberti, data engineer passionné par le développement de systèmes de données et l’intelligence artificielle, avec la volonté de mettre ses compétences au service du développement de la Guyane.""",
             "tools": [{"type": "web_search"}],
             "completion_args": {
                 "temperature": 0.7,

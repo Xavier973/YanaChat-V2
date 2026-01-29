@@ -497,9 +497,14 @@
         }        
         /* Mobile responsive */
         @media (max-width: 768px) {
+            body {
+                padding: 0;
+                align-items: stretch;
+            }
+
             .container {
-                height: 100vh;
-                max-height: 100vh;
+                height: 100dvh;
+                max-height: 100dvh;
                 border-radius: 0;
             }
             
@@ -517,7 +522,7 @@
             }
             
             .input-container {
-                padding: 15px 10px;
+                padding: 10px 10px;
             }
             
             .input-row {
@@ -538,16 +543,21 @@
             }
             
             .footer {
-                padding: 8px;
+                padding: 6px 8px;
                 border-radius: 0;
             }
             
             .footer-links {
                 font-size: 11px;
             }
+
+            .footer-links a,
+            .footer-text {
+                font-size: 12px;
+            }
             
             .chat-container {
-                padding: 15px 10px;
+                padding: 12px 10px;
             }
             
             .text {
@@ -580,7 +590,7 @@
                     autocomplete="off"
                 >
                 <button id="sendBtn" onclick="sendMessage()">Envoyer</button>
-                <button class="new-conversation-btn" onclick="clearConversation()">🔄 Nouvelle conversation</button>
+                <button class="new-conversation-btn" onclick="clearConversation()">🔄 </button>
             </div>
             <div class="checkbox-row hidden">
                 <input type="checkbox" id="webSearchCheckbox" checked>
