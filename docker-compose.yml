@@ -13,6 +13,8 @@ services:
       - SMTP_USER=${SMTP_USER}
       - SMTP_PASSWORD=${SMTP_PASSWORD}
       - REPORT_EMAIL=${REPORT_EMAIL}
+      - WEB_SEARCH_ENABLED=${WEB_SEARCH_ENABLED}
+      - WEB_SEARCH_SHOW=${WEB_SEARCH_SHOW}
       - PORT=8000
     volumes:
       - ./logs:/app/logs
