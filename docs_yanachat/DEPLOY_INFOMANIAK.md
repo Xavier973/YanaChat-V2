@@ -34,11 +34,11 @@ docker ps
 git clone https://github.com/Xavier973/YanaChat-V2 yanachat && cd yanachat
 ```
 
-- Créer un fichier `.env` au même niveau que `docker-compose.yml` pour les secrets :
+# Créer un fichier `.env` au même niveau que `docker-compose.yml` pour les secrets :
 
 ```env
-MISTRAL_API_URL="https://api.mistral.ai/v1/models/<model>/outputs"
 MISTRAL_API_KEY="sk_..."
+# MISTRAL_API_URL n'est pas utilisé pour le moment (endpoints fixés dans src/llm_pipeline.py)
 ```
 
 - (Optionnel) Éditer `docker-compose.yml` pour ajouter `restart: unless-stopped` sous le service `yana-backend` si vous préférez le déclarer ici.

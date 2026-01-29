@@ -172,7 +172,7 @@ nano .env
 ```env
 # Mistral API
 MISTRAL_API_KEY=votre clé ici
-MISTRAL_API_URL=https://api.mistral.ai/v1/chat/completions
+# MISTRAL_API_URL n'est pas utilisé pour le moment (endpoints fixés dans src/llm_pipeline.py)
 
 # Domaines
 DOMAIN=yanachat.votredomaine.com

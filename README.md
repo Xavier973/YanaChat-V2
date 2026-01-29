@@ -9,7 +9,12 @@ Mistral-powered chatbot with FastAPI and JSONL audit logging.
 ```bash
 # Create virtual environment
 python -m venv .venv
-.venv\Scripts\activate  # Windows
+
+# Activate (Linux/macOS)
+source .venv/bin/activate
+
+# Activate (Windows PowerShell)
+.venv\Scripts\Activate.ps1
 
 # Install dependencies
 pip install -r requirements.txt
@@ -18,12 +23,15 @@ pip install -r requirements.txt
 ### 2. Configure Credentials
 
 ```bash
-# Copy the example file
+# Copy the example file (Linux/macOS)
+cp .env.example .env
+
+# Copy the example file (Windows)
 copy .env.example .env
 
 # Edit .env with your Mistral API credentials
 # MISTRAL_API_KEY=your_key_here
-# MISTRAL_API_URL=https://api.mistral.ai/v1/chat/completions
+# (MISTRAL_API_URL is currently not used; endpoints are fixed in src/llm_pipeline.py)
 ```
 
 ### 3. Run Locally
@@ -77,13 +85,30 @@ Content-Type: application/json
 
 {
     "query": "Your question here",
-    "session_id": "optional-user-id"
+    "session_id": "optional-user-id",
+    "web_search": false
 }
 
 # Response
 {
     "response": "Mistral's answer here"
 }
+```
+
+### Conversation Memory
+```bash
+GET /api/history/{session_id}
+POST /api/clear_history
+```
+
+### Report a Conversation
+```bash
+POST /api/report
+```
+
+### Frontend Config
+```bash
+GET /api/config
 ```
 
 ### Health Check
@@ -127,8 +152,11 @@ YanaChat_V2/
 - **Robust Retry Logic**: Exponential backoff with 60-second timeout
 - **JSONL Audit Logging**: Every interaction is logged for audit and improvement
 - **Session Tracking**: Optional session IDs to group user queries
+- **Conversation Memory**: In-memory context per `session_id`
+- **Reporting**: Users can report conversations via SMTP email
 - **FastAPI Framework**: Modern, fast, async-capable web framework
 - **Web UI**: Simple, responsive chat interface
+- **Web Search (optional)**: Uses Mistral Agents API when enabled
 
 ## Configuration
 
@@ -136,8 +164,11 @@ YanaChat_V2/
 
 ```env
 MISTRAL_API_KEY=your_api_key_here
-MISTRAL_API_URL=https://api.mistral.ai/v1/chat/completions
 PORT=8000
+
+# Web search toggles for the UI
+WEB_SEARCH_ENABLED=false
+WEB_SEARCH_SHOW=true
 ```
 
 ## Logging
@@ -152,9 +183,12 @@ Example log entry:
     "model": "mistral-large-latest",
     "query": "What is the capital of France?",
     "response": "The capital of France is Paris...",
-    "latency_ms": 2340
+    "latency_ms": 2340,
+    "sources": []
 }
 ```
+
+Note: when `web_search=true`, sources are currently not returned by the Mistral Conversations API (see [docs_yanachat/LIMITATIONS.md](docs_yanachat/LIMITATIONS.md)).
 
 ## Development
 
@@ -198,7 +232,7 @@ Get-Content logs/interactions.jsonl | ConvertFrom-Json -Stream | ConvertTo-Json
 
 ### Web Search Sources Not Logged
 - **Known limitation**: Mistral Conversations API doesn't expose web_search sources
-- See [`LIMITATIONS.md`](LIMITATIONS.md) for details and workarounds
+- See [docs_yanachat/LIMITATIONS.md](docs_yanachat/LIMITATIONS.md) for details and workarounds
 - The `sources` field in logs will always be empty `[]` with current API
 
 ## License

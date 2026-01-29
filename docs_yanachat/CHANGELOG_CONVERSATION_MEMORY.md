@@ -16,7 +16,7 @@ Ajouter la capacité au chatbot de retenir le contexte des conversations précé
 - ✅ Ajout de `clear_session_history(session_id)` pour effacer l'historique d'une session
 - ✅ Ajout de `get_session_history(session_id)` pour récupérer l'historique
 - ✅ Passage de `conversation_history` à `LLMPipeline.generate()`
-- ✅ Logging de `history_length` dans les logs JSONL
+- ✅ Calcul de `history_length` en mémoire (non persisté dans le JSONL)
 
 **Impact:**
 - Chaque session maintient son propre historique indépendant
@@ -214,7 +214,7 @@ curl -X POST http://localhost:8000/api/chat \
 
 ## Logging
 
-### Nouveau champ `history_length`
+### Champs JSONL actuels
 ```json
 {
   "timestamp": "2026-01-24T20:00:00.000000",
@@ -224,9 +224,11 @@ curl -X POST http://localhost:8000/api/chat \
   "query": "Quel est mon prénom ?",
   "response": "Votre prénom est Julien.",
   "latency_ms": 1234,
-  "history_length": 4
+  "sources": []
 }
 ```
+
+Note : `history_length` est disponible en mémoire pendant la requête, mais n'est pas encore écrit dans le JSONL.
 
 ---
 

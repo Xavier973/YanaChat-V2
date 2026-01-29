@@ -187,7 +187,7 @@ python tests/test_conversation_memory.py
 
 ## Logging
 
-Chaque interaction log inclut maintenant:
+Chaque interaction log inclut actuellement :
 ```json
 {
   "timestamp": "2026-01-23T19:00:00.000000",
@@ -197,9 +197,11 @@ Chaque interaction log inclut maintenant:
   "query": "Quel est mon prénom ?",
   "response": "Votre prénom est Julien...",
   "latency_ms": 1234,
-  "history_length": 4  // ← Nombre de messages dans l'historique
+  "sources": []
 }
 ```
+
+Note : la longueur d'historique est calculée en mémoire pendant la requête, mais n'est pas encore persistée dans le JSONL.
 
 ## FAQ
 

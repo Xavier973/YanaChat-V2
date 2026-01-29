@@ -14,7 +14,7 @@
 # Aller sur https://console.mistral.ai/api-keys/
 # 1. Se connecter à votre compte Mistral
 # 2. Aller dans "API Keys"
-# 3. Trouver la clé exposée : XBc7LdqT8mVB7DPeieV7KP4ZE3Geoz2R
+# 3. Trouver la clé exposée : VOTRE_CLE_EXPOSEE_ICI
 # 4. Cliquer sur "Delete" ou "Revoke"
 # 5. Générer une NOUVELLE clé
 # 6. Copier la nouvelle clé (elle ne sera affichée qu'une fois)
