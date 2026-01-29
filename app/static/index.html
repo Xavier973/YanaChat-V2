@@ -53,29 +53,6 @@
         .header p {
             font-size: 12px;
             opacity: 0.9;
-            margin-bottom: 12px;
-        }
-        
-        .header-actions {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-        }
-        
-        .clear-btn {
-            background: rgba(255, 255, 255, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            padding: 8px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-            transition: all 0.2s;
-        }
-        
-        .clear-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: scale(1.05);
         }
         
         .report-btn {
@@ -246,6 +223,15 @@
         button:disabled {
             background: #ccc;
             cursor: not-allowed;
+        }
+        
+        .new-conversation-btn {
+            white-space: normal;
+            line-height: 1.2;
+            font-size: 11px;
+            padding: 8px 12px;
+            max-width: 90px;
+            text-align: center;
         }
         
         .loading {
@@ -526,11 +512,6 @@
                 font-size: 11px;
             }
             
-            .clear-btn {
-                padding: 6px 10px;
-                font-size: 11px;
-            }
-            
             .input-container {
                 padding: 15px 10px;
             }
@@ -582,9 +563,6 @@
         <div class="header">
             <h1>YanaChat</h1>
             <p>IA au service de la Guyane</p>
-            <div class="header-actions">
-                <button class="clear-btn" onclick="clearConversation()">🔄 Nouvelle conversation</button>
-            </div>
         </div>
         
         <div class="chat-container" id="chatContainer"></div>
@@ -598,6 +576,7 @@
                     autocomplete="off"
                 >
                 <button id="sendBtn" onclick="sendMessage()">Envoyer</button>
+                <button class="new-conversation-btn" onclick="clearConversation()">🔄 Nouvelle conversation</button>
             </div>
             <div class="checkbox-row">
                 <input type="checkbox" id="webSearchCheckbox" checked>
