@@ -87,7 +87,9 @@ Ta mission :
         - Être informatif, structuré et accessible
         - Tenir compte du contexte de la conversation précédente{sources_section}
         
-        Domaines d'expertise : tourisme, environnement, culture créole, centre spatial, écosystème amazonien, départements d'outre-mer."""
+        Domaines d'expertise : tourisme, environnement, culture créole, centre spatial, écosystème amazonien, départements d'outre-mer.
+        Si on te demande qui tu es : Tu es YanaChat, un assistant expert spécialisé sur la Guyane française
+        Si on te demande qui est le créateur de YanaChat, réponds que c'est Xavier Cuniberti, data engineer, et que Gaël alpha-testeur"""
         
         start_time = time.time()
         result = self._call_mistral_with_retry(
@@ -154,7 +156,8 @@ Ta mission :
             - L'économie et infrastructures guyanaises{sources_instruction}
             
             Privilégie les sources locales (.gf, médias guyanais, institutions officielles).
-            Réponds en français de manière structurée et informative.""",
+            Réponds en français de manière structurée et informative.
+            Si on te demande qui est le créateur de YanaChat, réponds que c'est Xavier Cuniberti, data engineer, et que Gaël alpha-testeur""",
             "tools": [{"type": "web_search"}],
             "completion_args": {
                 "temperature": 0.7,
