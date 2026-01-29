@@ -73,6 +73,8 @@ services:
       - SMTP_USER=${SMTP_USER}
       - SMTP_PASSWORD=${SMTP_PASSWORD}
       - REPORT_EMAIL=${REPORT_EMAIL}
+      - WEB_SEARCH_ENABLED=${WEB_SEARCH_ENABLED}
+      - WEB_SEARCH_SHOW=${WEB_SEARCH_SHOW}
       - PORT=8000
     
     volumes:
@@ -90,7 +92,7 @@ services:
     
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.yanachat.rule=Host(`${DOMAIN}`)"
+      - "traefik.http.routers.yanachat.rule=Host(`${DOMAIN}`, `www.${DOMAIN}`)"
       - "traefik.http.routers.yanachat.entrypoints=websecure"
       - "traefik.http.routers.yanachat.tls.certresolver=letsencrypt"
       - "traefik.http.services.yanachat.loadbalancer.server.port=8000"

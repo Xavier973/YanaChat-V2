@@ -15,6 +15,12 @@ from pydantic import BaseModel
 from src.chat_handler import ChatHandler
 
 
+def _parse_bool(value: Optional[str], default: bool = False) -> bool:
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "y", "on"}
+
+
 # Initialize FastAPI app
 app = FastAPI(
     title="YanaChat V2",
@@ -105,6 +111,17 @@ async def chat(request: ChatRequest) -> ChatResponse:
         print(f"Error in /api/chat: {traceback.format_exc()}")
         from fastapi import HTTPException
         raise HTTPException(status_code=500, detail=error_msg)
+
+
+@app.get("/api/config")
+async def get_config():
+    """Expose frontend configuration for web search behavior."""
+    web_search_enabled = _parse_bool(os.getenv("WEB_SEARCH_ENABLED"), False)
+    web_search_show = _parse_bool(os.getenv("WEB_SEARCH_SHOW"), False)
+    return {
+        "web_search_enabled": web_search_enabled,
+        "web_search_show": web_search_show
+    }
 
 
 @app.get("/health")

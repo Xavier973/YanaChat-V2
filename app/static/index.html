@@ -205,6 +205,10 @@
             font-size: 14px;
             color: #666;
         }
+
+        .checkbox-row.hidden {
+            display: none;
+        }
         
         input {
             flex: 1;
@@ -599,7 +603,7 @@
                 >
                 <button id="sendBtn" onclick="sendMessage()">Envoyer</button>
             </div>
-            <div class="checkbox-row">
+            <div class="checkbox-row hidden">
                 <input type="checkbox" id="webSearchCheckbox" checked>
                 <label for="webSearchCheckbox">Recherche web</label>
             </div>
@@ -664,6 +668,12 @@
         const queryInput = document.getElementById('queryInput');
         const sendBtn = document.getElementById('sendBtn');
         const sessionId = generateSessionId();
+        const webSearchRow = document.querySelector('.checkbox-row');
+        const webSearchCheckbox = document.getElementById('webSearchCheckbox');
+        const uiConfig = {
+            webSearchEnabled: false,
+            webSearchShow: false
+        };
         
         function generateSessionId() {
             return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
@@ -718,7 +728,7 @@
         
         async function sendMessage() {
             const query = queryInput.value.trim();
-            const webSearch = document.getElementById('webSearchCheckbox').checked;
+            const webSearch = uiConfig.webSearchShow ? webSearchCheckbox.checked : uiConfig.webSearchEnabled;
             
             if (!query) return;
             
@@ -816,6 +826,28 @@
             }
         }
         
+        async function loadConfig() {
+            try {
+                const response = await fetch('/api/config');
+                if (response.ok) {
+                    const data = await response.json();
+                    uiConfig.webSearchEnabled = !!data.web_search_enabled;
+                    uiConfig.webSearchShow = !!data.web_search_show;
+                }
+            } catch (error) {
+                // keep defaults
+            }
+
+            webSearchCheckbox.checked = uiConfig.webSearchEnabled;
+            if (webSearchRow) {
+                if (uiConfig.webSearchShow) {
+                    webSearchRow.classList.remove('hidden');
+                } else {
+                    webSearchRow.classList.add('hidden');
+                }
+            }
+        }
+
         // Focus input on load
         queryInput.focus();
         
@@ -842,12 +874,13 @@
         });
         
         // Show modal on first visit
-        window.addEventListener('load', () => {
+        window.addEventListener('load', async () => {
             const hasSeenModal = localStorage.getItem('yanachat_modal_seen');
             if (!hasSeenModal) {
                 openModal();
                 localStorage.setItem('yanachat_modal_seen', 'true');
             }
+            await loadConfig();
         });
         
         // Report modal functions
