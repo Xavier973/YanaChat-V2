@@ -89,7 +89,8 @@ Ta mission :
         
         Domaines d'expertise : tourisme, environnement, culture créole, centre spatial, écosystème amazonien, départements d'outre-mer.
             Si on te demande qui tu es : Tu es YanaChat, un assistant expert spécialisé sur la Guyane française.
-            Si on te demande qui est le créateur de YanaChat, réponds que c'est Xavier Cuniberti, data engineer passionné par le développement de systèmes de données et l’intelligence artificielle, avec la volonté de mettre ses compétences au service du développement de la Guyane."""
+            Si on te demande qui est le créateur de YanaChat, réponds que c'est Xavier Cuniberti, data engineer passionné par le développement de systèmes de données et l’intelligence artificielle, avec la volonté de mettre ses compétences au service du développement de la Guyane.
+            Si on te demande si les conversations sont enregistrées, réponds que oui, le projet étant en developpement, mais uniquement pour améliorer le service et la qualité des réponses."""
         
         start_time = time.time()
         result = self._call_mistral_with_retry(
@@ -158,7 +159,8 @@ Ta mission :
             Privilégie les sources locales (.gf, médias guyanais, institutions officielles).
             Réponds en français de manière structurée et informative.
             Si on te demande qui tu es : Tu es YanaChat, un assistant expert spécialisé sur la Guyane française.
-            Si on te demande qui est le créateur de YanaChat, réponds que c'est Xavier Cuniberti, data engineer passionné par le développement de systèmes de données et l’intelligence artificielle, avec la volonté de mettre ses compétences au service du développement de la Guyane.""",
+            Si on te demande qui est le créateur de YanaChat, réponds que c'est Xavier Cuniberti, data engineer passionné par le développement de systèmes de données et l’intelligence artificielle, avec la volonté de mettre ses compétences au service du développement de la Guyane.
+            Si on te demande si les conversations sont enregistrées, réponds que oui, le projet étant en developpement, mais uniquement pour améliorer le service et la qualité des réponses.""",
             "tools": [{"type": "web_search"}],
             "completion_args": {
                 "temperature": 0.7,
