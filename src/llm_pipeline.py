@@ -217,9 +217,16 @@ Ta mission :
                     # Use Agents/Conversations API for web search
                     agent_id = self._get_or_create_websearch_agent()
                     
+                    # Construire les inputs avec historique de conversation
+                    inputs = []
+                    # Ajouter l'historique de conversation
+                    inputs.extend(conversation_history)
+                    # Ajouter le message actuel de l'utilisateur
+                    inputs.append({"role": "user", "content": user_prompt})
+                    
                     payload = {
                         "agent_id": agent_id,
-                        "inputs": [{"role": "user", "content": user_prompt}]
+                        "inputs": inputs
                     }
                     
                     response = requests.post(

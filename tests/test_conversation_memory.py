@@ -17,19 +17,20 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from src.chat_handler import ChatHandler
 
 
-def test_conversation_memory():
+def test_conversation_memory(use_web_search=False):
     """Test que le chatbot retient le contexte de la conversation."""
+    mode_label = "AVEC WEB SEARCH" if use_web_search else "SANS WEB SEARCH"
     print("=" * 60)
-    print("TEST DE MÉMOIRE DE CONVERSATION")
+    print(f"TEST DE MÉMOIRE DE CONVERSATION - {mode_label}")
     print("=" * 60)
     
     handler = ChatHandler()
-    session_id = "test_memory_session"
+    session_id = f"test_memory_session_{mode_label.replace(' ', '_').lower()}"
     
     # Étape 1: Établir un contexte
     print("\n[1] Établissement du contexte...")
     query1 = "Je m'appelle Julien et je vis en Guyane."
-    result1 = handler.handle_query(query1, session_id=session_id, use_web_search=False)
+    result1 = handler.handle_query(query1, session_id=session_id, use_web_search=use_web_search)
     print(f"User: {query1}")
     print(f"Bot: {result1['response'][:200]}...")
     
@@ -43,7 +44,7 @@ def test_conversation_memory():
     # Étape 2: Poser une question qui nécessite le contexte
     print("\n[2] Question contextuelle...")
     query2 = "Quel est mon prénom ?"
-    result2 = handler.handle_query(query2, session_id=session_id, use_web_search=False)
+    result2 = handler.handle_query(query2, session_id=session_id, use_web_search=use_web_search)
     print(f"User: {query2}")
     print(f"Bot: {result2['response'][:200]}...")
     
@@ -53,7 +54,7 @@ def test_conversation_memory():
     print(f"✓ Historique mis à jour: {len(history)} messages")
     
     # Vérifier que la réponse mentionne "Julien"
-    if "Julien" in result2['response'].lower():
+    if "julien" in result2['response'].lower():
         print("✓ Le bot a retenu le prénom (Julien)")
     else:
         print("⚠ Le bot n'a peut-être pas retenu le prénom")
@@ -61,7 +62,7 @@ def test_conversation_memory():
     # Étape 3: Question de suivi
     print("\n[3] Question de suivi...")
     query3 = "Où est-ce que j'habite ?"
-    result3 = handler.handle_query(query3, session_id=session_id, use_web_search=False)
+    result3 = handler.handle_query(query3, session_id=session_id, use_web_search=use_web_search)
     print(f"User: {query3}")
     print(f"Bot: {result3['response'][:200]}...")
     
@@ -81,39 +82,40 @@ def test_conversation_memory():
     # Étape 5: Vérifier que le contexte est perdu après effacement
     print("\n[5] Vérification de perte de contexte...")
     query4 = "Comment je m'appelle ?"
-    result4 = handler.handle_query(query4, session_id=session_id, use_web_search=False)
+    result4 = handler.handle_query(query4, session_id=session_id, use_web_search=use_web_search)
     print(f"User: {query4}")
     print(f"Bot: {result4['response'][:200]}...")
     
-    if "Julien" not in result4['response'].lower():
+    if "julien" not in result4['response'].lower():
         print("✓ Le bot a oublié le contexte (comportement attendu)")
     else:
         print("⚠ Le bot semble encore connaître le contexte")
     
     print("\n" + "=" * 60)
-    print("TEST TERMINÉ")
+    print(f"TEST TERMINÉ - {mode_label}")
     print("=" * 60)
 
 
-def test_multiple_sessions():
+def test_multiple_sessions(use_web_search=False):
     """Test que les sessions sont isolées."""
+    mode_label = "AVEC WEB SEARCH" if use_web_search else "SANS WEB SEARCH"
     print("\n" + "=" * 60)
-    print("TEST D'ISOLATION DES SESSIONS")
+    print(f"TEST D'ISOLATION DES SESSIONS - {mode_label}")
     print("=" * 60)
     
     handler = ChatHandler()
     
     # Session 1
-    session1 = "session_alice"
+    session1 = f"session_alice_{mode_label.replace(' ', '_').lower()}"
     query1 = "Je m'appelle Alice."
-    result1 = handler.handle_query(query1, session_id=session1)
+    result1 = handler.handle_query(query1, session_id=session1, use_web_search=use_web_search)
     print(f"\n[Session Alice] {query1}")
     print(f"Bot: {result1['response'][:150]}...")
     
     # Session 2
-    session2 = "session_bob"
+    session2 = f"session_bob_{mode_label.replace(' ', '_').lower()}"
     query2 = "Je m'appelle Bob."
-    result2 = handler.handle_query(query2, session_id=session2)
+    result2 = handler.handle_query(query2, session_id=session2, use_web_search=use_web_search)
     print(f"\n[Session Bob] {query2}")
     print(f"Bot: {result2['response'][:150]}...")
     
@@ -131,7 +133,7 @@ def test_multiple_sessions():
     print("✓ Les sessions sont isolées")
     
     print("\n" + "=" * 60)
-    print("TEST TERMINÉ")
+    print(f"TEST TERMINÉ - {mode_label}")
     print("=" * 60)
 
 
@@ -139,10 +141,23 @@ if __name__ == "__main__":
     print("\n🤖 YanaChat V2 - Tests de Mémoire de Conversation\n")
     
     try:
-        test_conversation_memory()
-        test_multiple_sessions()
+        # Tests SANS web search
+        print("\n" + "🔵" * 30)
+        print("PHASE 1: Tests sans web search")
+        print("🔵" * 30 + "\n")
+        test_conversation_memory(use_web_search=False)
+        test_multiple_sessions(use_web_search=False)
         
-        print("\n✅ Tous les tests sont passés!")
+        # Tests AVEC web search
+        print("\n" + "🟢" * 30)
+        print("PHASE 2: Tests avec web search")
+        print("🟢" * 30 + "\n")
+        test_conversation_memory(use_web_search=True)
+        test_multiple_sessions(use_web_search=True)
+        
+        print("\n" + "=" * 60)
+        print("✅ Tous les tests sont passés!")
+        print("=" * 60)
         print("\nNote: Ces tests nécessitent une connexion à l'API Mistral.")
         print("Pour tester sans appels API réels, mockez LLMPipeline.generate()")
         
