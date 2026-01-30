@@ -33,7 +33,7 @@ Double logging (JSONL + .log lisible)
 Réponse JSON
 ```
 
-**Credentials** : `.env` contient `MISTRAL_API_KEY` (obligatoire)
+**Credentials** : `.env` contient `MISTRAL_API_KEY` (obligatoire). `MISTRAL_API_URL` n'est pas utilisé (endpoints fixés dans `src/llm_pipeline.py`).
 
 **Mémoire de conversation** : Historique stocké en mémoire par `session_id`, permet conversations contextuelles
 
@@ -57,7 +57,7 @@ YanaChat_V2/
 │   ├── run_tests.py          # Tests d'intégration
 │   ├── test_api_key.py       # Validation .env
 │   └── test_queries.yaml     # Queries de test structurées
-├── docs_markdown/            # Doc Mistral (référence locale)
+├── docs_yanachat/            # Documentation projet (mémoire, déploiement, SMTP, etc.)
 ├── .env                      # Secrets (git-ignored)
 ├── requirements.txt
 ├── docker-compose.yml
@@ -77,20 +77,28 @@ class LLMPipeline:
     def __init__(self):
         self.chat_url = "https://api.mistral.ai/v1/chat/completions"
         self.agents_url = "https://api.mistral.ai/v1/agents"
+        self.conversations_url = "https://api.mistral.ai/v1/conversations"
         self.model = "mistral-small-2506"  # Modèle actuel
         self._websearch_agent_id = None   # Cache pour agent websearch
     
-    def generate(self, user_query: str, use_web_search: bool = False) -> Dict:
+    def generate(self, user_query: str, conversation_history: list = None, use_web_search: bool = False) -> Dict:
         """Génère réponse via Mistral (chat OU agents avec websearch)."""
         system_prompt = """Tu es YanaChat, assistant expert sur la Guyane française.
         Domaines: tourisme, CSG Kourou, biodiversité amazonienne, culture créole."""
         
         if use_web_search:
-            return self._call_agents_api(user_query)  # Agents API
+            return self._call_mistral_with_retry(     # Conversations API via Agents
+                system_prompt=system_prompt,
+                user_prompt=user_query,
+                conversation_history=conversation_history,
+                use_web_search=True
+            )
         else:
             return self._call_mistral_with_retry(     # Chat API
-                system_prompt=system_prompt, 
-                user_prompt=user_query
+                system_prompt=system_prompt,
+                user_prompt=user_query,
+                conversation_history=conversation_history,
+                use_web_search=False
             )
     
     def _get_or_create_websearch_agent(self) -> str:
@@ -99,8 +107,8 @@ class LLMPipeline:
 ```
 
 **Patterns critiques** :
-- **Timeout** : 60s pour chat, 90s pour agents (API plus lente)
-- **Retry exponentiel** : 3 tentatives (backoff 2s, 4s, 8s)
+- **Timeout** : 60s pour chat et websearch
+- **Retry** : 3 tentatives avec backoff (429: 5s, 10s, 20s ; autres erreurs: 2s, 4s)
 - **Fallback** : `"Désolé, service indisponible."` jamais d'exception levée
 - **Model switching** : Commentaires inline pour tester d'autres modèles
 
@@ -158,6 +166,8 @@ class ChatHandler:
 - `GET /health` : `{"status": "ok", "service": "YanaChat V2"}`
 - `POST /api/clear_history` : `{"session_id": str}` → Efface l'historique d'une session
 - `GET /api/history/{session_id}` : Récupère l'historique d'une session
+- `POST /api/report` : Signalement de conversation (SMTP)
+- `GET /api/config` : Configuration frontend (web_search)
 - `GET /` : Serve `app/static/index.html` (UI interactive)
 
 ```python
@@ -214,7 +224,8 @@ async def health():
 ```bash
 # Setup local
 python -m venv .venv
-.venv\Scripts\activate  # Windows
+source .venv/bin/activate  # Linux/macOS
+.venv\Scripts\Activate.ps1  # Windows PowerShell
 pip install -r requirements.txt
 
 # Lancer (dev)
@@ -259,16 +270,9 @@ python tests/test_api_key.py
 
 1. **Ne pas reformuler** : Mistral génère, on ne post-process pas la réponse.
 2. **Crash prevention** : Fallback `"Désolé, service indisponible."` en cas d'erreur.
-3. **Timeouts généreux** : Mistral est slow, 60s c'est minimum.
+3. **Timeouts généreux** : Mistral est lent, 60s minimum.
 4. **Audit via logging** : Chaque interaction doit être en JSONL pour debug/stats.
-5. **Agent caching** : `_websearch_agent_id` est cached pour éviter création répétée (agents API est lent).
-6. **Model selection** : `self.model` dans `LLMPipeline.__init__` (voir commentaires inline pour tester d'autres modèles).
-7. **Error handling** : Toutes les API calls retournent fallback, jamais raise exception vers FastAPI.
-
-## Points Critiques
-
-1. **Ne pas reformuler** : Mistral génère, on ne post-process pas la réponse.
-2. **Crash prevention** : Fallback `"Désolé, service indisponible."` en cas d'erreur.
-3. **Timeouts généreux** : Mistral est slow, 60s c'est minimum.
-4. **Audit via logging** : Chaque interaction doit être en JSONL pour debug/stats.
+5. **Agent caching** : `_websearch_agent_id` est caché pour éviter création répétée.
+6. **Model selection** : `self.model` dans `LLMPipeline.__init__` (voir commentaires inline).
+7. **Error handling** : Toutes les API calls retournent un fallback, jamais d'exception vers FastAPI.
 
