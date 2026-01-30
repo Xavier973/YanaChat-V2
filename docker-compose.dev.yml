@@ -26,6 +26,18 @@ services:
     networks:
       - yanachat
 
+  portfolio:
+    image: python:3.11-slim
+    container_name: yanachat_portfolio_dev
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./portfolio:/srv/portfolio
+    working_dir: /srv/portfolio
+    command: python -m http.server 8001
+    networks:
+      - yanachat
+
 networks:
   yanachat:
     driver: bridge
